@@ -1,0 +1,37 @@
+name:          simple-dialog
+version:       0.1
+category:      GUI
+synopsis:      Simple dialogs for Haskell programs
+
+description:   A collection of basic dialogs for simple programs.
+               Currently includes:
+                 * An information dialog
+                 * An error dialog
+                 * A Yes/No dialog
+                 * An Ok/Cancel dialog
+                 * A text input dialog
+                 * A drop-down option dialog
+                 * A password dialog
+               All dialogs currently use GTK as a backend, but should
+               work regardless of whether GTK is used in the rest of
+               the program.
+
+homepage:      http://github.com/willdonnelly/simple-dialog
+bug-reports:   http://github.com/willdonnelly/simple-dialog/issues
+stability:     experimental
+author:        Will Donnelly
+maintainer:    Will Donnelly <will.donnelly@gmail.com>
+copyright:     (c) 2009 Will Donnelly
+license:       BSD3
+license-file:  LICENSE
+
+build-type:    Simple
+cabal-version: >= 1.6
+
+library
+  exposed-modules: Graphics.UI.Dialog.Simple
+  build-depends:   base >= 4 && < 5, gtk
+
+source-repository head
+  type:      git
+  location:  git://github.com/willdonnelly/simple-dialog.git
