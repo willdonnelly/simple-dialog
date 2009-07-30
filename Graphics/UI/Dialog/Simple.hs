@@ -38,6 +38,39 @@ showYesNoDialog = dialogOfType MessageQuestion ButtonsYesNo
 showOkCancelDialog :: String -> String -> IO Bool
 showOkCancelDialog = dialogOfType MessageWarning ButtonsOkCancel
 
+-- | Offers a single-line text input box. The user can cancel, which will
+--   result in a return value of Nothing.
+showTextDialog :: String -> String -> IO (Maybe String)
+showTextDialog = do
+    inputDialog (\dialog -> do
+                    input <- entryNew
+                    onEntryActivate input $ dialogResponse dialog ResponseOk
+                    return input)
+                (\input -> entryGetText input)
+
+-- | Give the user a choice between multiple options.
+showOptionDialog :: String -> String -> [String] -> IO (Maybe String)
+showOptionDialog title prompt options = do
+    inputDialog (\dialog -> do
+                    input <- comboBoxNewText
+                    mapM (comboBoxAppendText input) options
+                    return input)
+                (\input -> do
+                    idx <- comboBoxGetActive input
+                    let index = if idx < 0 then 0 else idx
+                    return $ options !! index)
+                title prompt
+
+-- | Ask the user to enter a password. Returns Nothing if cancelled.
+showPasswordDialog :: String -> String -> IO (Maybe String)
+showPasswordDialog = do
+    inputDialog (\dialog -> do
+                    input <- entryNew
+                    set input [entryVisibility := False]
+                    onEntryActivate input $ dialogResponse dialog ResponseOk
+                    return input)
+                (\input -> entryGetText input)
+
 dialogOfType :: MessageType -> ButtonsType -> String -> String -> IO Bool
 dialogOfType msgType btnType title msg = do
     initGUI
@@ -51,9 +84,11 @@ dialogOfType msgType btnType title msg = do
     widgetDestroy dialog
     return result
 
-titledPrompt title = do
+inputDialog getInput getValue title prompt = do
+    initGUI
     dialog <- dialogNew
     set dialog [ windowTitle := title ]
+
     dialogAddButton dialog stockOk ResponseOk
     dialogAddButton dialog stockCancel ResponseCancel
 
@@ -61,72 +96,19 @@ titledPrompt title = do
     windowSetKeepAbove dialog True
     windowSetSkipTaskbarHint dialog True
     windowSetSkipPagerHint dialog True
-
     dialogSetDefaultResponse dialog ResponseOk
 
-    return dialog
-
-dialogAddWidget dialog widget = do
-    box <- dialogGetUpper dialog
-    boxPackStart box widget PackGrow 10
-    widgetShowAll box
-
--- | Offers a single-line text input box. The user can cancel, which will
---   result in a return value of Nothing.
-showTextDialog :: String -> String -> IO (Maybe String)
-showTextDialog title prompt = do
-    initGUI
-    dialog <- titledPrompt title
     label <- labelNew $ Just prompt
-    input <- entryNew
-    dialogAddWidget dialog label
-    dialogAddWidget dialog input
-    onEntryActivate input $ dialogResponse dialog ResponseOk
+    input <- getInput dialog
+
+    upper <- dialogGetUpper dialog
+    boxPackStart upper label PackGrow 10
+    boxPackStart upper input PackGrow 10
+    widgetShowAll upper
 
     response <- dialogRun dialog
     result <- case response of
                    ResponseCancel -> return Nothing
-                   ResponseOk     -> do text <- entryGetText input
-                                        return . Just $ text
-    widgetDestroy dialog
-    return result
-
--- | Give the user a choice between multiple options.
-showOptionDialog :: String -> String -> [String] -> IO (Maybe String)
-showOptionDialog title prompt options = do
-    initGUI
-    dialog <- titledPrompt title
-    label <- labelNew $ Just prompt
-    input <- comboBoxNewText
-    mapM (comboBoxAppendText input) options
-    dialogAddWidget dialog label
-    dialogAddWidget dialog input
-
-    response <- dialogRun dialog
-    result <- case response of
-                   ResponseCancel -> return Nothing
-                   ResponseOk     -> do idx <- comboBoxGetActive input
-                                        return . Just $ options !! idx
-    widgetDestroy dialog
-    return result
-
--- | Ask the user to enter a password. Returns Nothing if cancelled.
-showPasswordDialog :: String -> String -> IO (Maybe String)
-showPasswordDialog title prompt = do
-    initGUI
-    dialog <- titledPrompt title
-    pwBox <- entryNew
-    set pwBox [entryVisibility := False]
-    onEntryActivate pwBox $ dialogResponse dialog ResponseOk
-
-    label <- labelNew $ Just prompt
-    dialogAddWidget dialog label
-    dialogAddWidget dialog pwBox
-
-    response <- dialogRun dialog
-    result <- case response of
-                   ResponseCancel -> return Nothing
-                   ResponseOk     -> do text <- entryGetText pwBox
-                                        return . Just $ text
+                   ResponseOk     -> fmap Just $ getValue input
     widgetDestroy dialog
     return result
