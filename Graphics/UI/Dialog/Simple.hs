@@ -1,3 +1,14 @@
+{- |
+
+Simple Dialogs
+==============
+
+Exactly what it says on the box. This library contains a collection
+of simple dialogs which can be thrown into a program with minimal
+effort. All functions take a title and a message. The option function
+also takes a list of options, given as strings.
+
+-}
 module Graphics.UI.Dialog.Simple
   ( showInfoDialog
   , showErrorDialog
@@ -10,15 +21,20 @@ module Graphics.UI.Dialog.Simple
 
 import Graphics.UI.Gtk
 
+-- | Show an informational message. Provides no options to the user other
+--   than to dismiss it.
 showInfoDialog :: String -> String -> IO ()
 showInfoDialog t m = dialogOfType MessageInfo ButtonsOk t m >> return ()
 
+-- | Like an information dialog, but with a more alarming icon.
 showErrorDialog :: String -> String -> IO ()
 showErrorDialog t m = dialogOfType MessageError ButtonsOk t m >> return ()
 
+-- | Offers the user a choice of either yes or no.
 showYesNoDialog :: String -> String -> IO Bool
 showYesNoDialog = dialogOfType MessageQuestion ButtonsYesNo
 
+-- | Offers the user the choice to cancel an action.
 showOkCancelDialog :: String -> String -> IO Bool
 showOkCancelDialog = dialogOfType MessageWarning ButtonsOkCancel
 
@@ -55,6 +71,8 @@ dialogAddWidget dialog widget = do
     boxPackStart box widget PackGrow 10
     widgetShowAll box
 
+-- | Offers a single-line text input box. The user can cancel, which will
+--   result in a return value of Nothing.
 showTextDialog :: String -> String -> IO (Maybe String)
 showTextDialog title prompt = do
     initGUI
@@ -73,6 +91,7 @@ showTextDialog title prompt = do
     widgetDestroy dialog
     return result
 
+-- | Give the user a choice between multiple options.
 showOptionDialog :: String -> String -> [String] -> IO (Maybe String)
 showOptionDialog title prompt options = do
     initGUI
@@ -91,6 +110,7 @@ showOptionDialog title prompt options = do
     widgetDestroy dialog
     return result
 
+-- | Ask the user to enter a password. Returns Nothing if cancelled.
 showPasswordDialog :: String -> String -> IO (Maybe String)
 showPasswordDialog title prompt = do
     initGUI
