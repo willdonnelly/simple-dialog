@@ -111,4 +111,8 @@ inputDialog getInput getValue title prompt = do
                    ResponseCancel -> return Nothing
                    ResponseOk     -> fmap Just $ getValue input
     widgetDestroy dialog
+    mainIteration
+    -- | Necessary to prevent the dialog hanging on-screen as other
+    --   stuff is processed. Don't ask why, I don't know.
+    eventsPending
     return result
